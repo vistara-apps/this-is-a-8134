@@ -89,6 +89,43 @@ export const stateLaws = {
     ],
     scriptEnglish: 'Officer, here is my identification as required. I am exercising my right to remain silent. I want to speak to a lawyer. I do not consent to any searches.',
     scriptSpanish: 'Oficial, aquí está mi identificación según se requiere. Estoy ejerciendo mi derecho a permanecer en silencio. Quiero hablar con un abogado. No consiento ningún registro.'
+  },
+  // Adding more states with comprehensive legal information
+  'GA': {
+    state: 'Georgia',
+    rightsSummary: 'Georgia law allows you to remain silent and requires reasonable suspicion for stops.',
+    doSay: [
+      'I am exercising my right to remain silent.',
+      'I want to speak to a lawyer.',
+      'I do not consent to any searches.',
+      'Am I free to leave?'
+    ],
+    dontSay: [
+      'You have no right!',
+      'This is illegal!',
+      'I know my rights!',
+      'I\'m going to sue!'
+    ],
+    scriptEnglish: 'Officer, I am exercising my right to remain silent. I want to speak to a lawyer. I do not consent to any searches. Am I free to leave?',
+    scriptSpanish: 'Oficial, estoy ejerciendo mi derecho a permanecer en silencio. Quiero hablar con un abogado. No consiento ningún registro. ¿Soy libre de irme?'
+  },
+  'IL': {
+    state: 'Illinois',
+    rightsSummary: 'Illinois protects your right to record police and remain silent during interactions.',
+    doSay: [
+      'I am exercising my right to remain silent.',
+      'I want to speak to a lawyer.',
+      'I do not consent to any searches.',
+      'I am recording this interaction.'
+    ],
+    dontSay: [
+      'You can\'t stop me!',
+      'This is harassment!',
+      'I pay your salary!',
+      'You\'re violating my rights!'
+    ],
+    scriptEnglish: 'Officer, I am exercising my right to remain silent. I want to speak to a lawyer. I do not consent to any searches. I am recording this interaction.',
+    scriptSpanish: 'Oficial, estoy ejerciendo mi derecho a permanecer en silencio. Quiero hablar con un abogado. No consiento ningún registro. Estoy grabando esta interacción.'
   }
 };
 

@@ -1,7 +1,11 @@
-import React from 'react';
-import { Crown, Check, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Crown, Check, X, Loader2 } from 'lucide-react';
+import { stripeService, SUBSCRIPTION_PLANS } from '../services/stripe';
+import { userService } from '../services/userService';
 
 export function PremiumUpgrade({ onUpgrade, onClose, className = '' }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const features = [
     { name: 'State-specific rights info', free: true, premium: true },
     { name: 'Basic interaction scripts', free: true, premium: true },
@@ -12,6 +16,36 @@ export function PremiumUpgrade({ onUpgrade, onClose, className = '' }) {
     { name: 'Offline access', free: false, premium: true },
     { name: 'Priority support', free: false, premium: true },
   ];
+
+  const handleUpgrade = async (planId) => {
+    setIsProcessing(true);
+    setSelectedPlan(planId);
+
+    try {
+      const userData = userService.getUserData();
+      
+      // For demo purposes, use mock subscription
+      // In production, this would redirect to Stripe Checkout
+      const result = await stripeService.mockSubscription(planId);
+      
+      if (result.success) {
+        // Update user's premium status
+        userService.updatePremiumStatus(true, result.subscription);
+        
+        // Call the parent component's onUpgrade function
+        onUpgrade(planId, result.subscription);
+        
+        // Close the modal
+        onClose();
+      }
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      alert('Upgrade failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setSelectedPlan(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -61,20 +95,37 @@ export function PremiumUpgrade({ onUpgrade, onClose, className = '' }) {
 
           <div className="space-y-3">
             <button
-              onClick={() => onUpgrade('annual')}
-              className="w-full bg-accent text-white py-3 px-4 rounded-md font-medium hover:bg-accent/90 transition-colors"
+              onClick={() => handleUpgrade('annual')}
+              disabled={isProcessing}
+              className="w-full bg-accent text-white py-3 px-4 rounded-md font-medium hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Get Annual Plan - $50/year (Save $10!)
+              {isProcessing && selectedPlan === 'annual' ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Get Annual Plan - $50/year (Save $10!)'
+              )}
             </button>
             <button
-              onClick={() => onUpgrade('monthly')}
-              className="w-full bg-primary text-white py-3 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors"
+              onClick={() => handleUpgrade('monthly')}
+              disabled={isProcessing}
+              className="w-full bg-primary text-white py-3 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Get Monthly Plan - $5/month
+              {isProcessing && selectedPlan === 'monthly' ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Get Monthly Plan - $5/month'
+              )}
             </button>
             <button
               onClick={onClose}
-              className="w-full text-text-secondary py-2 text-sm hover:text-text-primary transition-colors"
+              disabled={isProcessing}
+              className="w-full text-text-secondary py-2 text-sm hover:text-text-primary transition-colors disabled:opacity-50"
             >
               Maybe later
             </button>

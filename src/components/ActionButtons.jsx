@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Video, Share2, Users, Download, StopCircle } from 'lucide-react';
 import { useRecording } from '../hooks/useRecording';
 import { ContactPicker } from './ContactPicker';
+import { userService } from '../services/userService';
 
 export function ActionButtons({ isPremium = false, className = '' }) {
   const [showContactPicker, setShowContactPicker] = useState(false);
-  const [emergencyContacts, setEmergencyContacts] = useState([
-    { id: 1, name: 'Emergency Contact', phone: '+1-555-0123' },
-    { id: 2, name: 'Legal Aid', phone: '+1-555-0456' }
-  ]);
+  const [emergencyContacts, setEmergencyContacts] = useState([]);
+
+  useEffect(() => {
+    // Load contacts from user service
+    setEmergencyContacts(userService.getContacts());
+  }, []);
 
   const {
     isRecording,
@@ -116,6 +119,15 @@ export function ActionButtons({ isPremium = false, className = '' }) {
           onClose={() => setShowContactPicker(false)}
           onShare={(selectedContacts) => {
             console.log('Sharing with:', selectedContacts);
+            
+            // Log the interaction
+            userService.addInteractionLog({
+              type: 'recording_shared',
+              recordingUrl: recordingUrl,
+              sharedWith: selectedContacts.map(c => c.id),
+              sharedStatus: 'completed'
+            });
+            
             alert(`Recording shared with ${selectedContacts.length} contacts!`);
             setShowContactPicker(false);
           }}

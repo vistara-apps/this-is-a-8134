@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Menu, X, Crown, Settings, Info } from 'lucide-react';
+import { Shield, Menu, X, Crown, Settings as SettingsIcon, Info } from 'lucide-react';
 import { StateSelector } from './components/StateSelector';
 import { RightsCard } from './components/RightsCard';
 import { ActionButtons } from './components/ActionButtons';
 import { AIGenerator } from './components/AIGenerator';
 import { PremiumUpgrade } from './components/PremiumUpgrade';
+import { Settings } from './components/Settings';
 import { stateLaws } from './data/stateLaws';
 import { useGeolocation } from './hooks/useGeolocation';
+import { userService } from './services/userService';
 
 function App() {
-  const [selectedState, setSelectedState] = useState('CA');
-  const [language, setLanguage] = useState('english');
-  const [isPremium, setIsPremium] = useState(false);
+  const [userData, setUserData] = useState(userService.getUserData());
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('rights');
 
   const { location } = useGeolocation();
-  const stateLaw = stateLaws[selectedState];
+  const stateLaw = stateLaws[userData.state] || stateLaws['CA'];
 
   useEffect(() => {
     // Auto-detect state based on location (simplified)
@@ -27,12 +28,22 @@ function App() {
     }
   }, [location]);
 
-  const handleUpgrade = (plan) => {
-    // In a real app, this would integrate with Stripe
-    console.log('Upgrading to:', plan);
-    setIsPremium(true);
+  const handleUpgrade = (plan, subscription) => {
+    console.log('Upgrading to:', plan, subscription);
+    const updatedUserData = userService.getUserData();
+    setUserData(updatedUserData);
     setShowUpgrade(false);
     alert(`Welcome to Premium! You've selected the ${plan} plan.`);
+  };
+
+  const handleStateChange = (newState) => {
+    userService.updateUserState(newState);
+    setUserData(userService.getUserData());
+  };
+
+  const handleLanguageChange = (newLanguage) => {
+    userService.updateLanguagePreference(newLanguage);
+    setUserData(userService.getUserData());
   };
 
   const tabs = [
@@ -58,7 +69,7 @@ function App() {
             </div>
 
             <div className="flex items-center space-x-2">
-              {isPremium ? (
+              {userData.premiumStatus ? (
                 <div className="flex items-center space-x-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
                   <Crown className="h-4 w-4" />
                   <span>Premium</span>
@@ -85,8 +96,14 @@ function App() {
           {showMenu && (
             <div className="mt-4 pt-4 border-t border-gray-200 animate-slide-up">
               <nav className="space-y-2">
-                <button className="flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                  <Settings className="h-4 w-4" />
+                <button 
+                  onClick={() => {
+                    setShowSettings(true);
+                    setShowMenu(false);
+                  }}
+                  className="flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <SettingsIcon className="h-4 w-4" />
                   <span>Settings</span>
                 </button>
                 <button className="flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
@@ -104,8 +121,8 @@ function App() {
         {/* State Selector */}
         <div className="mb-6">
           <StateSelector
-            selectedState={selectedState}
-            onStateChange={setSelectedState}
+            selectedState={userData.state}
+            onStateChange={handleStateChange}
           />
         </div>
 
@@ -132,20 +149,20 @@ function App() {
           {activeTab === 'rights' && (
             <RightsCard
               stateLaw={stateLaw}
-              language={language}
-              onLanguageChange={setLanguage}
+              language={userData.languagePreference}
+              onLanguageChange={handleLanguageChange}
               expanded={true}
             />
           )}
 
           {activeTab === 'tools' && (
-            <ActionButtons isPremium={isPremium} />
+            <ActionButtons isPremium={userData.premiumStatus} />
           )}
 
           {activeTab === 'ai' && (
             <AIGenerator
-              selectedState={selectedState}
-              isPremium={isPremium}
+              selectedState={userData.state}
+              isPremium={userData.premiumStatus}
             />
           )}
         </div>
@@ -173,6 +190,17 @@ function App() {
         <PremiumUpgrade
           onUpgrade={handleUpgrade}
           onClose={() => setShowUpgrade(false)}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings
+          onClose={() => {
+            setShowSettings(false);
+            // Refresh user data in case settings changed
+            setUserData(userService.getUserData());
+          }}
         />
       )}
     </div>
